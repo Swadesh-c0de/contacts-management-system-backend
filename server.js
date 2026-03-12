@@ -11,8 +11,8 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(errorHandler);
-app.use('/api/contacts', contactRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/contacts', contactRoutes);
 
 app.listen(port, () => {
     console.log(`Server is running at port ${port}.`);
