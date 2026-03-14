@@ -1,6 +1,9 @@
 import constants from "../constants.js";
 
 const errorHandler = (err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
     const statusCode = res.statusCode ? res.statusCode : 500;
     switch(statusCode){
         case constants.VALIDATION_ERROR:
