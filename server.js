@@ -6,10 +6,14 @@ import contactRoutes from './routes/contactRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import connectDB from './config/dbConnection.js';
+import { globalLimiter } from './middleware/rateLimiter.js';
 
 connectDB();
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.set('trust proxy', 1);
+app.use(globalLimiter);
 
 app.use(cors({
     origin: true,

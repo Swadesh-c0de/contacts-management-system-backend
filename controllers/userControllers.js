@@ -1,17 +1,32 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
+import Contact from '../models/contactModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { validateEmail, validatePassword } from '../utils/validation.js';
 
 //@desc Register the user
 //@route POST /api/users/register
 //@access public
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    let { username, email, password } = req.body;
     if (!username || !email || !password) {
         res.status(400);
         throw new Error("All fields are mandatory!");
     }
+
+    if (!validateEmail(email)) {
+        res.status(400);
+        throw new Error("Invalid email address format!");
+    }
+
+    const errors = validatePassword(password);
+
+    if (errors.length > 0) {
+        res.status(400);
+        throw new Error(`Password must contain ${errors.join(", ")}`);
+    }
+
     const userAvailable = await User.findOne({ email });
     if (userAvailable) {
         res.status(400);
@@ -25,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password: hashedPassword,
     });
-    console.log("User created:", user);
+
     if (user) {
         res.status(201).json({ _id: user.id, email: user.email });
     } else {
@@ -38,11 +53,12 @@ const registerUser = asyncHandler(async (req, res) => {
 //@route POST /api/users/login
 //@access public
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
     if (!email || !password) {
         res.status(400);
         throw new Error("All fields are mandatory!");
     }
+    email = email.toLowerCase();
     const user = await User.findOne({ email });
 
     //compare password with hashed password
@@ -77,6 +93,88 @@ const currentUser = asyncHandler(async (req, res) => {
     res.json(req.user);
 })
 
+//desc Current user profile update
+//@route PUT /api/users/profile
+//@access private
+const updateProfile = asyncHandler(async (req, res) => {
+    const { username, email } = req.body;
+
+    if (!username && !email) {
+        res.status(400);
+        throw new Error("Please provide at least one field to update!");
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+
+    if (username) {
+        user.username = username;
+    }
+
+    if (email) {
+        if (!validateEmail(email)) {
+            res.status(400);
+            throw new Error("Invalid email address format!");
+        }
+
+        const emailInUse = await User.findOne({ email, _id: { $ne: req.user.id } });
+        if (emailInUse) {
+            res.status(400);
+            throw new Error("Email address already taken!");
+        }
+        user.email = email;
+    }
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+        _id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+    });
+});
+
+//@desc Change user password
+//@route PUT /api/users/change-password
+//@access private
+const changePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        res.status(400);
+        throw new Error("All fields are mandatory!");
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordCorrect) {
+        res.status(401);
+        throw new Error("Current password is incorrect");
+    }
+
+    const errors = validatePassword(newPassword);
+
+    if (errors.length > 0) {
+        res.status(400);
+        throw new Error(`Password must contain ${errors.join(", ")}`);
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+});
+
 //@desc Logout the user
 //@route GET /api/users/logout
 //@access private
@@ -88,4 +186,27 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "User logged out" });
 })
 
-export { registerUser, loginUser, currentUser, logoutUser };
+//@desc Delete user profile
+//@route DELETE /api/users/profile
+//@access private
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+
+    await Contact.deleteMany({ user_id: req.user.id });
+
+    await User.findByIdAndDelete(req.user.id);
+
+    res.clearCookie("jwt", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+    });
+
+    res.status(200).json({ message: "User and associated contacts deleted successfully" });
+});
+
+
+export { registerUser, loginUser, currentUser, updateProfile, changePassword, logoutUser, deleteUser };
