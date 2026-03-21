@@ -15,6 +15,8 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error("All fields are mandatory!");
     }
 
+    email = email.toLowerCase();
+
     if (!validateEmail(email)) {
         res.status(400);
         throw new Error("Invalid email address format!");
@@ -115,6 +117,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
 
     if (email) {
+        email = email.toLowerCase();
         if (!validateEmail(email)) {
             res.status(400);
             throw new Error("Invalid email address format!");
