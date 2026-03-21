@@ -92,7 +92,16 @@ const loginUser = asyncHandler(async (req, res) => {
 //@route GET /api/users/profile
 //@access private
 const currentUser = asyncHandler(async (req, res) => {
-    res.json(req.user);
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+    res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email
+    });
 })
 
 //desc Current user profile update
