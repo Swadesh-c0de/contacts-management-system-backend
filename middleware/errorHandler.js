@@ -5,6 +5,7 @@ const errorHandler = (err, req, res, next) => {
         return next(err);
     }
     const statusCode = res.statusCode < 400 ? 500 : res.statusCode;
+    res.status(statusCode);
     switch (statusCode) {
         case constants.VALIDATION_ERROR:
             res.json({

@@ -108,7 +108,7 @@ const currentUser = asyncHandler(async (req, res) => {
 //@route PUT /api/users/profile
 //@access private
 const updateProfile = asyncHandler(async (req, res) => {
-    const { username, email } = req.body;
+    let { username, email } = req.body;
 
     if (!username && !email) {
         res.status(400);
