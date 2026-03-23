@@ -1,3 +1,10 @@
 PORT=3000
-CONNECTION_STRING=MONGODB_URI
-ACCESS_TOKEN_SECRET=your_secret_key
+CONNECTION_STRING=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
+ACCESS_TOKEN_SECRET=your_jwt_secret_key_here
+NODE_ENV=development
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=
+RATE_LIMIT_MAX=
+STRICT_RATE_LIMIT_WINDOW_MS=
+STRICT_RATE_LIMIT_MAX=

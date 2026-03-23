@@ -15,7 +15,7 @@ router.put('/profile', validateToken, updateProfile)
 
 router.delete('/profile', validateToken, deleteUser)
 
-router.put('/change-password', validateToken, strictLimiter, changePassword)
+router.put('/change-password', strictLimiter, validateToken, changePassword)
 
 router.get('/logout', validateToken, logoutUser)
 

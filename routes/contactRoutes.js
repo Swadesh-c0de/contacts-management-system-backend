@@ -4,10 +4,8 @@ import validateToken from '../middleware/validateTokenHandler.js';
 import { strictLimiter } from '../middleware/rateLimiter.js';
 const router = express.Router();
 
-router.use(validateToken);
+router.route("/").get(validateToken, getContacts).post(strictLimiter, validateToken, createContact);
 
-router.route("/").get(getContacts).post(strictLimiter, createContact);
-
-router.route("/:id").get(getContact).put(updateContact).delete(deleteContact);
+router.route("/:id").get(validateToken, getContact).put(strictLimiter, validateToken, updateContact).delete(strictLimiter, validateToken, deleteContact);
 
 export default router;
