@@ -13,7 +13,6 @@ This API is designed with security and scalability in mind. It features a robust
     - **Authentication**: JWT-based authentication with refresh token rotation for continuous session security.
     - **Token Management**: Short-lived access tokens (15m) with long-lived refresh tokens (7d) for better security and UX.
     - **Password Security**: Uses industry-standard `Bcrypt` for salt-and-peppered hashing.
-    - **NoSQL Injection Prevention**: `express-mongo-sanitize` middleware sanitizes all inputs against MongoDB operators.
     - **Security Headers**: Helmet.js provides comprehensive HTTP security headers (X-Content-Type-Options, X-Frame-Options, CSP, etc.).
     - **Rate Limiting**: Protects your server from brute-force and spam attacks with both global and route-specific limits.
     - **Secure Error Handling**: Automatically hides sensitive stack traces in production to prevent information leaks.
@@ -24,6 +23,8 @@ This API is designed with security and scalability in mind. It features a robust
 - **Improved Data Model**:
     - **Per-User Uniqueness**: Contact uniqueness (email/phone) is enforced **per user**, allowing different users to save the same contact information in their private lists.
 - **Developer Friendly**:
+    - **Express 5 Ready**: Optimized for the latest Express features with a custom-built NoSQL injection sanitization system designed specifically for Express 5.
+    - **Robust Contact Updates**: Supports partial updates, allowing you to update specific fields without affecting others or risking server crashes.
     - **Centralized Validation**: Improved code quality by moving all validation logic into a dedicated utility module.
     - **Error Handling**: Centralized middleware that translates complex errors into readable, actionable JSON responses.
     - **Serverless Ready**: Fully optimized for deployment on Vercel or similar serverless architectures.
@@ -76,9 +77,9 @@ This project is tailored for **Vercel**. Follow these simple steps to go live:
 
 ## 🛠️ Stack Summary
 
-- **Backend**: Node.js & Express.js
+- **Backend**: Node.js & Express.js (v5+)
 - **Database**: MongoDB with Mongoose
-- **Security**: JWT with Refresh Token Rotation, Bcrypt, Helmet.js, express-mongo-sanitize, and Express-Rate-Limit
+- **Security**: JWT with Refresh Token Rotation, Bcrypt, Helmet.js, Custom NoSQL Injection Sanitization, and Express-Rate-Limit
 - **Infrastructure**: Vercel (Serverless ready)
 
 ---
@@ -96,8 +97,11 @@ Setting up for local testing or contribution is straightforward:
 
 2. **Configure Environment**
    Create a `.env` file in the root directory:
+   > [!IMPORTANT]
+   > Ensure you use a `.env` file (not `.env.local`) as `dotenv` is configured to load the standard `.env` file for compatibility across different environments.
+
    ```env
-   PORT=3000
+   PORT=5001
    CONNECTION_STRING=your_mongodb_uri
    ACCESS_TOKEN_SECRET=your_secret_string
    REFRESH_TOKEN_SECRET=your_refresh_secret_string

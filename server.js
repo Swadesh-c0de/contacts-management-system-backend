@@ -3,7 +3,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
+import sanitize from './middleware/sanitize.js';
 import contactRoutes from './routes/contactRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(mongoSanitize());
+app.use(sanitize);
 app.use(globalLimiter);
 
 app.use(cors({

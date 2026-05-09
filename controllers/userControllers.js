@@ -288,7 +288,11 @@ const deleteUser = asyncHandler(async (req, res) => {
 
     await User.findByIdAndDelete(req.user.id);
 
-    res.clearCookie("jwt", {
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+    });
+    res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
     });

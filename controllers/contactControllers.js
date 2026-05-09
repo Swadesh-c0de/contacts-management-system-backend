@@ -70,7 +70,7 @@ const getContact = asyncHandler(async (req, res) => {
 
     if (contact.user_id.toString() !== req.user.id) {
         res.status(403);
-        throw new Error("User don't have permission to access other user contacts");
+        throw new Error("User doesn't have permission to access other user contacts");
     }
 
     res.status(200).json(contact);
@@ -88,46 +88,60 @@ const updateContact = asyncHandler(async (req, res) => {
 
     if (contact.user_id.toString() !== req.user.id) {
         res.status(403);
-        throw new Error("User don't have permission to update other user contacts");
+        throw new Error("User doesn't have permission to update other user contacts");
     }
 
-    const nameError = validateContactName(req.body.name);
-    if (nameError) {
+    const { name, email, phone } = req.body;
+    const newData = {};
+
+    if (name) {
+        const nameError = validateContactName(name);
+        if (nameError) {
+            res.status(400);
+            throw new Error(nameError);
+        }
+        newData.name = name.trim().toUpperCase();
+    }
+
+    if (email) {
+        if (!validateEmail(email)) {
+            res.status(400);
+            throw new Error("Invalid email address format!");
+        }
+        newData.email = email.trim().toLowerCase();
+    }
+
+    if (phone) {
+        if (!validatePhone(phone)) {
+            res.status(400);
+            throw new Error("Invalid phone number!");
+        }
+        newData.phone = phone.trim();
+    }
+
+    if (Object.keys(newData).length === 0) {
         res.status(400);
-        throw new Error(nameError);
+        throw new Error("Please provide at least one field to update");
     }
 
-    if (req.body.email && !validateEmail(req.body.email)) {
-        res.status(400);
-        throw new Error("Invalid email address format!");
-    }
+    // Check for duplicate contact if email or phone is updated
+    if (newData.email || newData.phone) {
+        const contactExists = await Contact.findOne({
+            email: newData.email || contact.email,
+            phone: newData.phone || contact.phone,
+            user_id: req.user.id,
+            _id: { $ne: req.params.id }
+        });
 
-    if (req.body.phone && !validatePhone(req.body.phone)) {
-        res.status(400);
-        throw new Error("Invalid phone number!");
-    }
-
-    const newData = {
-        name: req.body.name.toUpperCase(),
-        email: req.body.email.toLowerCase(),
-        phone: req.body.phone,
-    }
-
-    const contactExists = await Contact.findOne({
-        email: newData.email,
-        phone: newData.phone,
-        user_id: req.user.id,
-        _id: { $ne: req.params.id }
-    });
-
-    if (contactExists) {
-        res.status(400);
-        throw new Error("Contact already exists!");
+        if (contactExists) {
+            res.status(400);
+            throw new Error("Contact with this email or phone already exists!");
+        }
     }
 
     const updatedContact = await Contact.findByIdAndUpdate(
         req.params.id,
-        newData,
+        { $set: newData },
         { new: true }
     )
     res.status(200).json(updatedContact);
@@ -145,10 +159,10 @@ const deleteContact = asyncHandler(async (req, res) => {
 
     if (contact.user_id.toString() !== req.user.id) {
         res.status(403);
-        throw new Error("User don't have permission to update other user contacts");
+        throw new Error("User doesn't have permission to delete other user contacts");
     }
-    const deletedContact = await Contact.deleteOne({ _id: req.params.id });
-    res.status(200).json(deletedContact);
+    await Contact.deleteOne({ _id: req.params.id });
+    res.status(200).json({ message: "Contact deleted successfully", id: req.params.id });
 })
 
 export { getContacts, createContact, getContact, updateContact, deleteContact };
