@@ -10,8 +10,11 @@ This API is designed with security and scalability in mind. It features a robust
 
 - **Multi-user Isolation**: Each user manages their own private contact list, completely isolated from others.
 - **Enhanced Security**: 
-    - **Authentication**: Supports both `Bearer` tokens and secure `HTTP-only` cookies.
+    - **Authentication**: JWT-based authentication with refresh token rotation for continuous session security.
+    - **Token Management**: Short-lived access tokens (15m) with long-lived refresh tokens (7d) for better security and UX.
     - **Password Security**: Uses industry-standard `Bcrypt` for salt-and-peppered hashing.
+    - **NoSQL Injection Prevention**: `express-mongo-sanitize` middleware sanitizes all inputs against MongoDB operators.
+    - **Security Headers**: Helmet.js provides comprehensive HTTP security headers (X-Content-Type-Options, X-Frame-Options, CSP, etc.).
     - **Rate Limiting**: Protects your server from brute-force and spam attacks with both global and route-specific limits.
     - **Secure Error Handling**: Automatically hides sensitive stack traces in production to prevent information leaks.
 - **Account Management**: 
@@ -38,6 +41,7 @@ All protected routes require a valid JWT token. In production, sensitive routes 
 | :------- | :----------------- | :------------------------------- | :------ | :--------- |
 | `POST`   | `/register`        | Sign up for a new account        | Public  | Strict     |
 | `POST`   | `/login`           | Authenticate and start a session | Public  | Strict     |
+| `POST`   | `/refresh`         | Refresh access token             | Public  | Global     |
 | `PUT`    | `/profile`         | Update username or email         | Private | Global     |
 | `DELETE` | `/profile`         | Permanently delete account       | Private | Global     |
 | `PUT`    | `/change-password` | Update account password          | Private | Strict     |
@@ -64,7 +68,8 @@ This project is tailored for **Vercel**. Follow these simple steps to go live:
 2. **Vercel Integration**: Import your repo from the Vercel dashboard.
 3. **Environment Variables**: Make sure to set these in your project settings:
    - `CONNECTION_STRING`: Your MongoDB connection URI.
-   - `ACCESS_TOKEN_SECRET`: A strong, random string for JWT encryption.
+   - `ACCESS_TOKEN_SECRET`: A strong, random string for JWT access token encryption.
+   - `REFRESH_TOKEN_SECRET`: A strong, random string for JWT refresh token encryption.
    - `NODE_ENV`: Set to `production` to enable secure error handling and cookie security.
 
 ---
@@ -73,7 +78,7 @@ This project is tailored for **Vercel**. Follow these simple steps to go live:
 
 - **Backend**: Node.js & Express.js
 - **Database**: MongoDB with Mongoose
-- **Security**: JWT, Bcrypt, and Express-Rate-Limit
+- **Security**: JWT with Refresh Token Rotation, Bcrypt, Helmet.js, express-mongo-sanitize, and Express-Rate-Limit
 - **Infrastructure**: Vercel (Serverless ready)
 
 ---
@@ -95,12 +100,17 @@ Setting up for local testing or contribution is straightforward:
    PORT=3000
    CONNECTION_STRING=your_mongodb_uri
    ACCESS_TOKEN_SECRET=your_secret_string
+   REFRESH_TOKEN_SECRET=your_refresh_secret_string
    NODE_ENV=development
    ```
 
 3. **Launch**
    ```bash
+   # Development mode (with auto-reload)
    npm run dev
+   
+   # Production mode
+   npm start
    ```
 
 ---

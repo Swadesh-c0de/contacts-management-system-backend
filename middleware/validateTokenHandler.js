@@ -7,8 +7,8 @@ const validateToken = asyncHandler(async (req, res, next) => {
     // console.log(authHeader);
     if (authHeader && authHeader.startsWith("Bearer")) {
         token = authHeader.split(" ")[1];
-    } else if (req.cookies && req.cookies.jwt) {
-        token = req.cookies.jwt;
+    } else if (req.cookies && req.cookies.accessToken) {
+        token = req.cookies.accessToken;
     }
 
     if (!token) {

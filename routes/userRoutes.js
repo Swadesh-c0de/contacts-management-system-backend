@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, currentUser, updateProfile, changePassword, logoutUser, deleteUser } from '../controllers/userControllers.js';
+import { registerUser, loginUser, currentUser, updateProfile, changePassword, logoutUser, deleteUser, refreshAccessToken } from '../controllers/userControllers.js';
 import validateToken from '../middleware/validateTokenHandler.js';
 import { strictLimiter } from '../middleware/rateLimiter.js';
 
@@ -8,6 +8,8 @@ const router = express.Router();
 router.post('/register', strictLimiter, registerUser);
 
 router.post('/login', strictLimiter, loginUser)
+
+router.post('/refresh', refreshAccessToken)
 
 router.get('/profile', validateToken, currentUser)
 

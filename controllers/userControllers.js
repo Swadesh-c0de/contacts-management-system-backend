@@ -74,9 +74,29 @@ const loginUser = asyncHandler(async (req, res) => {
                 },
             },
             process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        const refreshToken = jwt.sign(
+            {
+                user: {
+                    id: user.id,
+                },
+            },
+            process.env.REFRESH_TOKEN_SECRET,
             { expiresIn: '7d' }
         );
-        res.cookie("jwt", accessToken, {
+
+        // Store refresh token in database
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+        });
+        res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -187,11 +207,67 @@ const changePassword = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Password changed successfully" });
 });
 
+//@desc Refresh access token
+//@route POST /api/users/refresh
+//@access public
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (!refreshToken) {
+        res.status(401);
+        throw new Error("Refresh token is missing");
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const user = await User.findById(decoded.user.id);
+
+        if (!user || user.refreshToken !== refreshToken) {
+            res.status(401);
+            throw new Error("Invalid or expired refresh token");
+        }
+
+        // Issue new access token
+        const newAccessToken = jwt.sign(
+            {
+                user: {
+                    username: user.username,
+                    email: user.email,
+                    id: user.id,
+                },
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+        });
+
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch (err) {
+        res.status(401);
+        throw new Error("Invalid or expired refresh token");
+    }
+});
+
 //@desc Logout the user
 //@route GET /api/users/logout
 //@access private
 const logoutUser = asyncHandler(async (req, res) => {
-    res.clearCookie("jwt", {
+    const user = await User.findById(req.user.id);
+    if (user) {
+        user.refreshToken = null;
+        await user.save();
+    }
+
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+    });
+    res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
     });
@@ -221,4 +297,4 @@ const deleteUser = asyncHandler(async (req, res) => {
 });
 
 
-export { registerUser, loginUser, currentUser, updateProfile, changePassword, logoutUser, deleteUser };
+export { registerUser, loginUser, currentUser, updateProfile, changePassword, logoutUser, deleteUser, refreshAccessToken };
