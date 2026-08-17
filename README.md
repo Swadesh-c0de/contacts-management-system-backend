@@ -150,17 +150,6 @@ contacts-management-system-backend/
 
 ---
 
-## 🌐 Deployment (Vercel)
-
-This application is ready for serverless deployment on **Vercel**:
-
-1. Push your repository to GitHub.
-2. Import the repository in your [Vercel Dashboard](https://vercel.com/).
-3. Add your Environment Variables (`CONNECTION_STRING`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `NODE_ENV=production`, `FRONTEND_URL`).
-4. Click **Deploy**. Vercel will automatically configure the build using [vercel.json](file:///home/veronica/Desktop/contacts-management-system-backend/vercel.json).
-
----
-
 <div align="center">
   <sub>Maintained by <a href="https://github.com/Swadesh-c0de"><strong>Swadesh-c0de</strong></a></sub>
 </div>
