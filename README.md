@@ -23,6 +23,14 @@ The **Contacts Management System API** provides a secure backend for managing pr
 
 ---
 
+## 🖥️ Frontend Application
+
+This repository contains the backend REST API. The frontend client web application is available in the companion repository:
+
+👉 **[Kontacts](https://github.com/Swadesh-c0de/kontacts)** — Modern user interface for managing contacts, authentication sessions, and user profiles.
+
+---
+
 ## 🏗️ Architecture & Request Flow
 
 ```mermaid
