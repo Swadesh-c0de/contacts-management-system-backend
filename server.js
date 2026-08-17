@@ -16,8 +16,6 @@ const port = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(sanitize);
-app.use(globalLimiter);
 
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -25,14 +23,20 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json());
 app.use(cookieParser());
+app.use(sanitize);
+app.use(globalLimiter);
+
 app.use('/api/users', userRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use(errorHandler);
 
-app.listen(port, () => {
-    console.log(`Server is running at port ${port}.`);
-})
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(port, () => {
+        console.log(`Server is running at port ${port}.`);
+    });
+}
 
 export default app;

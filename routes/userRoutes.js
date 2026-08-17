@@ -19,6 +19,6 @@ router.delete('/profile', validateToken, deleteUser)
 
 router.put('/change-password', strictLimiter, validateToken, changePassword)
 
-router.get('/logout', validateToken, logoutUser)
+router.post('/logout', validateToken, logoutUser)
 
 export default router;

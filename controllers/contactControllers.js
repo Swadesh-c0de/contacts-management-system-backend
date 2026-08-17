@@ -44,14 +44,16 @@ const createContact = asyncHandler(async (req, res) => {
     }
 
     const contactExists = await Contact.findOne({
-        email: contactData.email,
-        phone: contactData.phone,
-        user_id: req.user.id
+        user_id: req.user.id,
+        $or: [
+            { email: contactData.email },
+            { phone: contactData.phone }
+        ]
     });
 
     if (contactExists) {
         res.status(400);
-        throw new Error("Contact already exists!");
+        throw new Error("Contact with this email or phone already exists!");
     }
 
     const contact = await Contact.create(contactData);
@@ -126,11 +128,14 @@ const updateContact = asyncHandler(async (req, res) => {
 
     // Check for duplicate contact if email or phone is updated
     if (newData.email || newData.phone) {
+        const conditions = [];
+        if (newData.email) conditions.push({ email: newData.email });
+        if (newData.phone) conditions.push({ phone: newData.phone });
+
         const contactExists = await Contact.findOne({
-            email: newData.email || contact.email,
-            phone: newData.phone || contact.phone,
             user_id: req.user.id,
-            _id: { $ne: req.params.id }
+            _id: { $ne: req.params.id },
+            $or: conditions
         });
 
         if (contactExists) {
