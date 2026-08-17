@@ -26,17 +26,34 @@ The **Contacts Management System API** provides a secure backend for managing pr
 ## 🏗️ Architecture & Request Flow
 
 ```mermaid
-flowchart LR
-    Client([Client / Frontend]) -->|HTTP Request| Helmet[🛡️ Helmet Security Headers]
-    Helmet --> CORS[🌐 CORS Policy]
-    CORS --> Parser[📦 JSON Body & Cookie Parser]
-    Parser --> Sanitize[🧹 NoSQL Operator Sanitizer]
-    Sanitize --> Limiter{⏳ Rate Limiter}
-    Limiter -->|Passed| AuthCheck{🔑 JWT Auth Middleware}
-    AuthCheck -->|Public Routes| Controllers[⚙️ Route Controllers]
-    AuthCheck -->|Private Routes + Valid Token| Controllers
-    Controllers --> Mongoose[(🍃 MongoDB Atlas)]
-    Controllers -->|Exception| ErrorHandler[🚨 Centralized Error Handler]
+flowchart TD
+    Client(["🌐 Client / Frontend"]) --> HTTP["HTTP Request"]
+
+    subgraph Security ["🛡️ Security & Middleware Pipeline"]
+        HTTP --> Helmet["1. Helmet Security Headers"]
+        Helmet --> CORS["2. CORS Validation"]
+        CORS --> Parser["3. JSON & Cookie Parser"]
+        Parser --> Sanitize["4. NoSQL Operator Sanitizer"]
+        Sanitize --> RateLimit["5. IP Rate Limiter"]
+    end
+
+    RateLimit --> Router{"🔀 Route Dispatcher"}
+
+    subgraph Auth ["🔑 Access Control"]
+        Router -->|"Protected Route"| ValidateJWT["JWT Token Verification"]
+        Router -->|"Public Route"| PublicHandler["Direct Controller Route"]
+    end
+
+    ValidateJWT -->|"Authorized"| Controller["⚙️ Route Controller"]
+    PublicHandler --> Controller
+
+    subgraph Storage ["💾 Persistence & Error Handling"]
+        Controller -->|"Query / Mutation"| DB[("🍃 MongoDB Atlas")]
+        Controller -->|"Exception Thrown"| Handler["🚨 Centralized Error Handler"]
+    end
+
+    DB --> Response(["📤 JSON / Cookie Response"])
+    Handler --> Response
 ```
 
 ---
